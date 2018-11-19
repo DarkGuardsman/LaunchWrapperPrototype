@@ -16,8 +16,9 @@ import java.util.Map;
 public class Main {
 
     public static final String ARG_UI = "ui";
-    public static final String ARG_PATH = "path";
-    public static final String ARG_COMMAND = "command";
+    public static final String ARG_PATH = "jarpath";
+    public static final String ARG_PROGRAM = "pgargs";
+    public static final String ARG_VM = "vmargs";
 
     public static void main(String... argsStringArray)
     {
@@ -37,7 +38,7 @@ public class Main {
         {
             System.out.println("Running as command line");
             try {
-                runJar(args.get(ARG_PATH), args.get(ARG_COMMAND));
+                runJar(args.get(ARG_PATH), args.get(ARG_VM), args.get(ARG_PROGRAM));
 
                 System.out.println("Done..");
                 System.exit(0);
@@ -53,23 +54,38 @@ public class Main {
         }
         else
         {
-            System.err.println("ERROR: path=\"Path/to/jar.jar\" argument is required to know what jar to launch");
+            System.err.println("ERROR: " + ARG_PATH + "=\"Path/to/jar.jar\" argument is required to know what jar to launch");
             System.exit(1);
         }
     }
 
-    public static void runJar(String path, String command) throws IOException, InterruptedException {
+    public static void runJar(String path, String vmArgs, String programArgs) throws IOException, InterruptedException {
 
         //Default args for run
         List<String> args = new ArrayList();
         args.add("java");
+
+        //If we have jvm args
+        if(vmArgs != null) {
+
+            String[] split = vmArgs.split("\\s+");
+            for(String s : split)
+            {
+                s = s.trim();
+                if(!s.isEmpty())
+                {
+                    args.add(s);
+                }
+            }
+        }
+
         args.add("-jar");
         args.add(path);
 
         //If we have command args
-        if(command != null) {
+        if(programArgs != null) {
 
-           String[] split = command.split("\\s+");
+           String[] split = programArgs.split("\\s+");
            for(String s : split)
            {
                s = s.trim();

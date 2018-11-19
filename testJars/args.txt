@@ -1,0 +1,1 @@
+Java -Xmx1024M -Xms1024M -jar mcJar.jar nogui 
