@@ -1,5 +1,7 @@
 package com.darkguardsman.launchwrapper;
 
+import com.darkguardsman.launchwrapper.util.StringHelpers;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -175,7 +177,7 @@ public class Main {
         System.out.println("Exit code: " + exitCode);
 
         long endTime = System.currentTimeMillis();
-        System.out.println("Runtime: " + (startTime - endTime));
+        System.out.println("Runtime: " + StringHelpers.formatNanoTime(TimeUnit.MILLISECONDS.toNanos(endTime - startTime)));
     }
 
     /**
