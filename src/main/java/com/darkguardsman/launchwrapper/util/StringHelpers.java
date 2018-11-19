@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DecimalFormat;
 
+//Taken from CodingLib, do not edit
 /**
  * Quick class to house utility methods related to strings
  *

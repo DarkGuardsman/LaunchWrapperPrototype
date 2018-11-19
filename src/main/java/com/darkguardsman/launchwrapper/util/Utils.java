@@ -1,6 +1,7 @@
 package com.darkguardsman.launchwrapper.util;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -11,6 +12,7 @@ public class Utils {
 
     /**
      * Converts a string to milliseconds value
+     *
      * @param timeString
      * @return
      */
@@ -33,6 +35,24 @@ public class Utils {
         return -2;
     }
 
+    /**
+     * Takes a string and splits it by spaces. Adding any non-empty string to the collect
+     * list.
+     *
+     * @param stringToSplit
+     * @param collect
+     */
+    public static void collectSubStrings(String stringToSplit, List<String> collect) {
+        if(stringToSplit != null && !stringToSplit.trim().isEmpty()) {
+            String[] split = stringToSplit.split("\\s+");
+            for (String s : split) {
+                s = s.trim();
+                if (!s.isEmpty()) {
+                    collect.add(s);
+                }
+            }
+        }
+    }
 
 
     /**

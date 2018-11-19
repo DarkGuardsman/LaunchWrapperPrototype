@@ -80,31 +80,14 @@ public class Main {
         args.add("java");
 
         //If we have jvm args
-        if (vmArgs != null) {
-
-            String[] split = vmArgs.split("\\s+");
-            for (String s : split) {
-                s = s.trim();
-                if (!s.isEmpty()) {
-                    args.add(s);
-                }
-            }
-        }
+        Utils.collectSubStrings(vmArgs, args);
 
         args.add("-jar");
         args.add(path);
 
         //If we have command args
-        if (programArgs != null) {
+        Utils.collectSubStrings(programArgs, args);
 
-            String[] split = programArgs.split("\\s+");
-            for (String s : split) {
-                s = s.trim();
-                if (!s.isEmpty()) {
-                    args.add(s);
-                }
-            }
-        }
         //Build process and start
         ProcessBuilder pb = new ProcessBuilder(args);
 
