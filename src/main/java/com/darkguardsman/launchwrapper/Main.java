@@ -1,8 +1,12 @@
 package com.darkguardsman.launchwrapper;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -55,27 +59,46 @@ public class Main {
     }
 
     public static void runJar(String path, String command) throws IOException, InterruptedException {
-        ProcessBuilder pb;
-        if(command != null) {
-            pb = new ProcessBuilder("java", "-jar", path, command);
-        }
-        else {
-            pb = new ProcessBuilder("java", "-jar", path);
-        }
 
+        //Default args for run
+        List<String> args = new ArrayList();
+        args.add("java");
+        args.add("-jar");
+        args.add(path);
+
+        //If we have command args
+        if(command != null) {
+
+           String[] split = command.split("\\s+");
+           for(String s : split)
+           {
+               s = s.trim();
+               if(!s.isEmpty())
+               {
+                   args.add(s);
+               }
+           }
+        }
+        //Build process and start
+        ProcessBuilder pb = new ProcessBuilder(args);
         Process proc = pb.start();
 
+        //Read output and dump to console
+        BufferedReader is = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+
+        String line;
+        while ((line = is.readLine()) != null) {
+            System.out.println(line);
+        }
+
+        //Wait for process toe end
         int exitCode = proc.waitFor();
         System.out.println("Exit code: " + exitCode);
 
-        InputStream in = proc.getInputStream();
+        //Get process output
         InputStream err = proc.getErrorStream();
 
-        System.out.println("\nOutput Stream: ");
-        byte b[]=new byte[in.available()];
-        in.read(b,0,b.length);
-        System.out.println(new String(b));
-
+        //Output error
         System.out.println("\nError Stream: ");
         byte c[]=new byte[err.available()];
         err.read(c,0,c.length);
