@@ -1,16 +1,16 @@
 package com.darkguardsman.launchwrapper;
 
+import com.darkguardsman.launchwrapper.util.RunnableStreamWriter;
 import com.darkguardsman.launchwrapper.util.StringHelpers;
+import com.darkguardsman.launchwrapper.util.Utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,7 +27,7 @@ public class Main {
 
     public static void main(String... argsStringArray) {
         System.out.println("Starting wrapper...");
-        Map<String, String> args = loadArgs(argsStringArray);
+        Map<String, String> args = Utils.loadArgs(argsStringArray);
 
         if (args.containsKey(ARG_UI)) {
             System.out.println("Running as GUI");
@@ -59,24 +59,13 @@ public class Main {
     }
 
     private static int getExitTime(String timeString) {
-
-        if (timeString == null || timeString.trim().isEmpty()) {
-            return -1;
+        int out = Utils.stringToMiliSeconds(timeString);
+        if(out == -2) {
+            throw new IllegalArgumentException("Invalid input for " + ARG_EXIT_TIME + " of " + timeString + "." +
+                    "Supported values start with a whole number and end with one of the follow: m ms s h. " +
+                    "With m being minutes, ms being miliseconds, s being seconds, and h hours");
         }
-        timeString = timeString.toLowerCase().trim();
-
-        if (timeString.endsWith("m")) {
-            return 1000 * 60 * Integer.parseInt(timeString.substring(0, timeString.length() - 1));
-        } else if (timeString.endsWith("ms")) {
-            return Integer.parseInt(timeString.substring(0, timeString.length() - 2));
-        } else if (timeString.endsWith("s")) {
-            return 1000 * Integer.parseInt(timeString.substring(0, timeString.length() - 1));
-        } else if (timeString.endsWith("h")) {
-            return 1000 * 60 * 60 * Integer.parseInt(timeString.substring(0, timeString.length() - 1));
-        }
-        throw new IllegalArgumentException("Invalid input for " + ARG_EXIT_TIME + " of " + timeString + "." +
-                "Supported values start with a whole number and end with one of the follow: m ms s h. " +
-                "With m being minutes, ms being miliseconds, s being seconds, and h hours");
+        return out;
     }
 
     public static void runJar(String path, String vmArgs, String programArgs, int exitTime) throws IOException, InterruptedException {
@@ -124,38 +113,9 @@ public class Main {
         System.out.println("Process Started");
 
         //Collect output on a second thread
-        Thread thread = new Thread(() -> {
-            try {
-                System.out.println("Thread writer started");
-                //Read output and dump to console
-                BufferedReader is = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-
-                String line;
-                while ((line = is.readLine()) != null) {
-                    System.out.println(line);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            System.out.println("Thread writer done");
-        });
+        Thread thread = new Thread(new RunnableStreamWriter("output", proc.getInputStream()));
         thread.start();
-
-        Thread thread2 = new Thread(() -> {
-            try {
-                System.out.println("Thread writer started");
-                //Read output and dump to console
-                BufferedReader is = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
-
-                String line;
-                while ((line = is.readLine()) != null) {
-                    System.out.println(line);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            System.out.println("Thread writer done");
-        });
+        Thread thread2 = new Thread(new RunnableStreamWriter("error", proc.getErrorStream()));
         thread2.start();
 
         //Wait for process toe end
@@ -178,60 +138,6 @@ public class Main {
 
         long endTime = System.currentTimeMillis();
         System.out.println("Runtime: " + StringHelpers.formatNanoTime(TimeUnit.MILLISECONDS.toNanos(endTime - startTime)));
-    }
-
-    /**
-     * Converts arguments into a hashmap for usage
-     *
-     * @param args
-     * @return
-     */
-    public static Map<String, String> loadArgs(String... args) {
-        final HashMap<String, String> map = new HashMap();
-        if (args != null) {
-            String currentArg = null;
-            String currentValue = "";
-            for (int i = 0; i < args.length; i++) {
-                String next = args[i].trim();
-                if (next == null) {
-                    throw new IllegalArgumentException("Null argument detected in launch arguments");
-                } else if (next.startsWith("-")) {
-                    if (currentArg != null) {
-                        map.put(currentArg, currentValue);
-                        currentValue = "";
-                    }
-
-                    if (next.contains("=")) {
-                        String[] split = next.split("=");
-                        currentArg = split[0].substring(1).trim();
-                        if (split.length > 1) {
-                            currentValue = split[1].trim();
-                            if (split.length > 2) {
-                                for (int l = 2; l < split.length; l++) {
-                                    currentValue += "=" + split[l];
-                                }
-                            }
-                        } else {
-                            currentValue = "";
-                        }
-                    } else {
-                        currentArg = next.substring(1).trim();
-                    }
-                } else if (currentArg != null) {
-                    if (!currentValue.isEmpty()) {
-                        currentValue += ",";
-                    }
-                    currentValue += next.replace("\"", "").replace("'", "").trim();
-                } else {
-                    throw new IllegalArgumentException("Value has no argument associated with it [" + next + "]");
-                }
-            }
-            //Add the last loaded value to the map
-            if (currentArg != null) {
-                map.put(currentArg, currentValue);
-            }
-        }
-        return map;
     }
 
 }
