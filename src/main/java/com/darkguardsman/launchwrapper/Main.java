@@ -29,7 +29,7 @@ public class Main {
             System.exit(0);
             return;
         }
-        else if(args.containsKey(ARG_PATH) && args.containsKey(ARG_COMMAND))
+        else if(args.containsKey(ARG_PATH))
         {
             System.out.println("Running as command line");
             try {
@@ -49,13 +49,20 @@ public class Main {
         }
         else
         {
-            System.err.println("ERROR: path=\"Path/to/jar.jar\" and command=\"arg,arg2,arg3\" arguments are required to launch the jar");
+            System.err.println("ERROR: path=\"Path/to/jar.jar\" argument is required to know what jar to launch");
             System.exit(1);
         }
     }
 
     public static void runJar(String path, String command) throws IOException, InterruptedException {
-        ProcessBuilder pb = new ProcessBuilder("java", "-jar", path, command);
+        ProcessBuilder pb;
+        if(command != null) {
+            pb = new ProcessBuilder("java", "-jar", path, command);
+        }
+        else {
+            pb = new ProcessBuilder("java", "-jar", path);
+        }
+
         Process proc = pb.start();
 
         int exitCode = proc.waitFor();
